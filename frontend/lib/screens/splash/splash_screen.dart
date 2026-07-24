@@ -1,3 +1,4 @@
+import '../auth/login_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,12 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     Timer(const Duration(seconds: 2), () {
-      // TODO: Navigate to Login Screen
+      Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (_) => const LoginScreen(),
+  ),
+);
     });
   }
 
