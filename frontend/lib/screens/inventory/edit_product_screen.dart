@@ -1,23 +1,45 @@
 import 'package:flutter/material.dart';
-import '../../database/database_helper.dart';
-import '../../models/product.dart';
+
 import '../../models/product.dart';
 
+class EditProductScreen extends StatefulWidget {
+  final Product product;
 
-class AddProductScreen extends StatefulWidget {
-  const AddProductScreen({super.key});
+  const EditProductScreen({
+    super.key,
+    required this.product,
+  });
 
   @override
-  State<AddProductScreen> createState() => _AddProductScreenState();
+  State<EditProductScreen> createState() => _EditProductScreenState();
 }
 
-class _AddProductScreenState extends State<AddProductScreen> {
+class _EditProductScreenState extends State<EditProductScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final nameController = TextEditingController();
-  final categoryController = TextEditingController();
-  final quantityController = TextEditingController();
-  final priceController = TextEditingController();
+  late TextEditingController nameController;
+  late TextEditingController categoryController;
+  late TextEditingController quantityController;
+  late TextEditingController priceController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    nameController =
+        TextEditingController(text: widget.product.name);
+
+    categoryController =
+        TextEditingController(text: widget.product.category);
+
+    quantityController =
+        TextEditingController(
+            text: widget.product.quantity.toString());
+
+    priceController =
+        TextEditingController(
+            text: widget.product.price.toString());
+  }
 
   @override
   void dispose() {
@@ -28,43 +50,31 @@ class _AddProductScreenState extends State<AddProductScreen> {
     super.dispose();
   }
 
-  Future<void> saveProduct() async {
-  if (_formKey.currentState!.validate()) {
-    Product product = Product(
-      id: DateTime.now().millisecondsSinceEpoch,
-      name: nameController.text.trim(),
-      category: categoryController.text.trim(),
-      quantity: int.parse(quantityController.text),
-      price: double.parse(priceController.text),
-    );
+  void updateProduct() {
+    if (_formKey.currentState!.validate()) {
+      widget.product.name = nameController.text;
+      widget.product.category = categoryController.text;
+      widget.product.quantity =
+          int.parse(quantityController.text);
+      widget.product.price =
+          double.parse(priceController.text);
 
-    await DatabaseHelper.insertProduct(product.toMap());
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Product Added Successfully"),
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    Navigator.pop(context, true);
+      Navigator.pop(context, true);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Product"),
+        title: const Text("Edit Product"),
         backgroundColor: Colors.indigo,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          child: Column(
+          child: ListView(
             children: [
               TextFormField(
                 controller: nameController,
@@ -73,7 +83,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value!.isEmpty ? "Enter Product Name" : null,
+                    value == null || value.isEmpty
+                        ? "Enter Product Name"
+                        : null,
               ),
 
               const SizedBox(height: 20),
@@ -85,7 +97,9 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value!.isEmpty ? "Enter Category" : null,
+                    value == null || value.isEmpty
+                        ? "Enter Category"
+                        : null,
               ),
 
               const SizedBox(height: 20),
@@ -98,31 +112,37 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value!.isEmpty ? "Enter Quantity" : null,
+                    value == null || value.isEmpty
+                        ? "Enter Quantity"
+                        : null,
               ),
 
               const SizedBox(height: 20),
 
               TextFormField(
                 controller: priceController,
-                keyboardType: TextInputType.number,
+                keyboardType:
+                    const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: "Price",
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) =>
-                    value!.isEmpty ? "Enter Price" : null,
+                    value == null || value.isEmpty
+                        ? "Enter Price"
+                        : null,
               ),
 
               const SizedBox(height: 30),
 
               SizedBox(
-                width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: saveProduct,
+                  onPressed: updateProduct,
                   child: const Text(
-                    "SAVE PRODUCT",
+                    "UPDATE PRODUCT",
                     style: TextStyle(fontSize: 18),
                   ),
                 ),

@@ -1,8 +1,43 @@
-import '../inventory/add_product_screen.dart';
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
+import '../../database/database_helper.dart';
+import '../inventory/add_product_screen.dart';
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int totalProducts = 0;
+  int totalQuantity = 0;
+  int lowStock = 0;
+  double totalValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    loadDashboard();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    loadDashboard();
+  }
+
+  Future<void> loadDashboard() async {
+    totalProducts = await DatabaseHelper.getTotalProducts();
+    totalQuantity = await DatabaseHelper.getTotalQuantity();
+    totalValue = await DatabaseHelper.getTotalValue();
+    lowStock = await DatabaseHelper.getLowStockCount();
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   Widget dashboardCard(
       IconData icon,
@@ -23,6 +58,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color, size: 35),
           const SizedBox(height: 10),
@@ -70,114 +106,112 @@ class HomeScreen extends StatelessWidget {
         title: const Text("InventoryPro"),
         backgroundColor: Colors.indigo,
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            const Text(
-              "Welcome, AJ 👋",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: loadDashboard,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Welcome, AJ 👋",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 8),
-
-            const Text(
-              "Manage your inventory efficiently",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
+              const SizedBox(height: 8),
+              const Text(
+                "Manage your inventory efficiently",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
               ),
-            ),
+              const SizedBox(height: 25),
 
-            const SizedBox(height: 25),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              childAspectRatio: 1.2,
-              children: [
-
-                dashboardCard(
-                  Icons.inventory,
-                  Colors.indigo,
-                  "250",
-                  "Products",
-                ),
-
-                dashboardCard(
-                  Icons.currency_rupee,
-                  Colors.green,
-                  "₹18,540",
-                  "Sales",
-                ),
-
-                dashboardCard(
-                  Icons.people,
-                  Colors.orange,
-                  "154",
-                  "Customers",
-                ),
-
-                dashboardCard(
-                  Icons.warning,
-                  Colors.red,
-                  "12",
-                  "Low Stock",
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "Quick Actions",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 1.2,
+                children: [
+                  dashboardCard(
+                    Icons.inventory,
+                    Colors.indigo,
+                    totalProducts.toString(),
+                    "Products",
+                  ),
+                  dashboardCard(
+                    Icons.layers,
+                    Colors.green,
+                    totalQuantity.toString(),
+                    "Stock Qty",
+                  ),
+                  dashboardCard(
+                    Icons.currency_rupee,
+                    Colors.orange,
+                    "₹${totalValue.toStringAsFixed(2)}",
+                    "Inventory Value",
+                  ),
+                  dashboardCard(
+                    Icons.warning,
+                    Colors.red,
+                    lowStock.toString(),
+                    "Low Stock",
+                  ),
+                ],
               ),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              childAspectRatio: 1.2,
-              children: [
+              const Text(
+                "Quick Actions",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
-                GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AddProductScreen(),
-      ),
-    );
-  },
-  child: actionCard(
-    Icons.add,
-    "Add Product",
-  ),
-),
-                actionCard(Icons.receipt_long, "New Bill"),
-                actionCard(Icons.people, "Customers"),
-                actionCard(Icons.local_shipping, "Suppliers"),
+              const SizedBox(height: 20),
 
-              ],
-            ),
-          ],
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 1.2,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      bool? added = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AddProductScreen(),
+                        ),
+                      );
+
+                      if (added == true) {
+                        loadDashboard();
+                      }
+                    },
+                    child: actionCard(
+                      Icons.add,
+                      "Add Product",
+                    ),
+                  ),
+
+                  actionCard(Icons.receipt_long, "New Bill"),
+                  actionCard(Icons.people, "Customers"),
+                  actionCard(Icons.local_shipping, "Suppliers"),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
